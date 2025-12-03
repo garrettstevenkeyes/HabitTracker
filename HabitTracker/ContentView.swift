@@ -62,24 +62,7 @@ struct ContentView: View {
             }
             .navigationTitle("Hobby Tracker")
             .navigationBarTitleDisplayMode(.inline)
-            .background(
-                ZStack {
-                    AngularGradient(
-                        gradient: Gradient(colors: [.blue, .indigo, .purple, .pink, .red, .orange, .yellow, .green, .teal, .blue]),
-                        center: .center
-                    )
-                    .opacity(0.55)
-
-                    RadialGradient(
-                        gradient: Gradient(colors: [.black.opacity(0.2), .clear, .white.opacity(0.08)]),
-                        center: .center,
-                        startRadius: 20,
-                        endRadius: 600
-                    )
-                    .blendMode(.screen)
-                }
-                .ignoresSafeArea()
-            )
+            .background(GroovyBackground())
             .preferredColorScheme(.dark)
         }
     }
