@@ -131,8 +131,6 @@ struct GridTileView: View {
     var body: some View {
         ScrollView {
             LazyVGrid(columns: columns) {
-
-                // Add Hobby tile
                 Button(action: onAddTapped) {
                     VStack(spacing: 12) {
                         Image(systemName: "plus")

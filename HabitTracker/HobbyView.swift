@@ -41,9 +41,6 @@ struct HobbyView: View {
             // Foreground card with editable description
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text(hobby.name)
-                        .font(.title2.bold())
-                        .foregroundStyle(.white)
 
                     TextEditor(text: $editableDescription)
                         .scrollContentBackground(.hidden)
