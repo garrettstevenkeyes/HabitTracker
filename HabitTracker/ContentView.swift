@@ -20,7 +20,7 @@ struct ContentView: View {
     var body: some View {
         NavigationStack{
             GridTileView(
-                hobbies: hobbies,
+                hobbies: $hobbies,
                 highlightedID: lastAddedHobbyID,
                 onAddTapped: {
                     showingAddHobby = true
@@ -50,45 +50,14 @@ struct ContentView: View {
                 }
             )
             .sheet(isPresented: $showingAddHobby) {
-                NavigationStack {
-                    Form {
-                        Section("Details") {
-                            TextField("Name", text: $newName)
-                            TextField("Description", text: $newDescription)
-                            Stepper("Day Streak: \(newDayStreak)", value: $newDayStreak, in: 0...365)
-                        }
-                    }
-                    .navigationTitle("New Hobby")
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Cancel") {
-                                showingAddHobby = false
-                                newName = ""
-                                newDescription = ""
-                                newDayStreak = 0
-                            }
-                        }
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Add") {
-                                let id = newName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-                                guard !id.isEmpty else { return }
-                                
-                                hobbies[id] = Hobby(
-                                    id: id,
-                                    name: newName,
-                                    description: newDescription,
-                                    dayStreak: newDayStreak
-                                )
-                                
-                                lastAddedHobbyID = id
-                                showingAddHobby = false
-                                newName = ""
-                                newDescription = ""
-                                newDayStreak = 0
-                            }
-                            .disabled(newName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                        }
-                    }
+                AddHobbyView(isPresented: $showingAddHobby) { id, name, description, dayStreak in
+                    hobbies[id] = Hobby(
+                        id: id,
+                        name: name,
+                        description: description,
+                        dayStreak: dayStreak
+                    )
+                    lastAddedHobbyID = id
                 }
             }
             .navigationTitle("Hobby Tracker")
@@ -116,11 +85,54 @@ struct ContentView: View {
     }
 }
 
+struct AddHobbyView: View {
+    @Binding var isPresented: Bool
+    var onAdd: (_ id: String, _ name: String, _ description: String, _ dayStreak: Int) -> Void
+
+    @State private var newName: String = ""
+    @State private var newDescription: String = ""
+    @State private var newDayStreak: Int = 0
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Details") {
+                    TextField("Name", text: $newName)
+                    TextField("Description", text: $newDescription)
+                    Stepper("Day Streak: \(newDayStreak)", value: $newDayStreak, in: 0...365)
+                }
+            }
+            .navigationTitle("New Hobby")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        isPresented = false
+                        newName = ""
+                        newDescription = ""
+                        newDayStreak = 0
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Add") {
+                        let id = newName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                        guard !id.isEmpty else { return }
+                        onAdd(id, newName, newDescription, newDayStreak)
+                        isPresented = false
+                        newName = ""
+                        newDescription = ""
+                        newDayStreak = 0
+                    }
+                    .disabled(newName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+    }
+}
 
 // MARK: - GridTileView
 
 struct GridTileView: View {
-    var hobbies: [String: Hobby]
+    @Binding var hobbies: [String: Hobby]
     var highlightedID: String?
     var onAddTapped: () -> Void
     var onIncrement: (String) -> Void
@@ -156,7 +168,16 @@ struct GridTileView: View {
                 // Hobby Tiles
                 ForEach(Array(hobbies.values).sorted { $0.name < $1.name }, id: \.id) { hobby in
                     NavigationLink {
-                        HobbyView(hobby: hobby)
+                        HobbyView(hobby: hobby) { id, newDescription in
+                            if let existing = hobbies[id] {
+                                hobbies[id] = Hobby(
+                                    id: existing.id,
+                                    name: existing.name,
+                                    description: newDescription,
+                                    dayStreak: existing.dayStreak
+                                )
+                            }
+                        }
                     } label: {
                         HobbyTileView(
                             hobby: hobby,
@@ -255,8 +276,10 @@ struct HobbyTileView: View {
 }
 
 
+
 // MARK: - Preview
 
 #Preview {
     ContentView()
 }
+
